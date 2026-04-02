@@ -9,8 +9,12 @@ import {
   useRef,
   useState,
 } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useChat } from "@/features/chat";
 import { useUserPreferences } from "@/providers/user-preferences-provider";
+import { runtimeEnvsListQuery } from "@/features/runtime-env/queries";
+import { chatMessagesQuery } from "@/features/chat/queries/chat-messages.query";
+import type { ChatMessage } from "@/features/chat/types";
 import {
   Select,
   SelectContent,
@@ -19,6 +23,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AVAILABLE_MODELS, PROVIDERS } from "@/features/settings/types";
+import { Button } from "./button";
+
+// Map provider to their API key environment variable name
+const PROVIDER_API_KEYS: Record<string, string> = {
+  openai: "OPENAI_API_KEY",
+  anthropic: "ANTHROPIC_API_KEY",
+  gemini: "GEMINI_API_KEY",
+  minimax: "MINIMAX_API_KEY",
+};
 
 interface CommandItem {
   label: string;
@@ -70,13 +83,48 @@ export function AnimatedAIChat() {
     preferences?.defaultModel || "gpt-4o",
   );
 
+  // Fetch user's runtime envs to check which providers have API keys
+  const { data: runtimeEnvsData } = useQuery(runtimeEnvsListQuery());
+  const runtimeEnvs = runtimeEnvsData?.success ? runtimeEnvsData.data : [];
+
+  // Check if user has API key for a provider
+  const hasApiKeyForProvider = (provider: string): boolean => {
+    // Check user preferences for openai/anthropic
+    if (provider === "openai" && preferences?.hasOpenAIKey) return true;
+    if (provider === "anthropic" && preferences?.hasAnthropicKey) return true;
+    // Check runtime envs for all providers (including gemini, minimax)
+    const apiKeyName = PROVIDER_API_KEYS[provider];
+    if (apiKeyName && runtimeEnvs?.length) {
+      return runtimeEnvs.some(
+        (env: { key: string; isActive: boolean }) =>
+          env.key === apiKeyName && env.isActive,
+      );
+    }
+    return false;
+  };
+
+  // Get list of enabled providers (those with API keys)
+  const enabledProviders = PROVIDERS.filter((p) =>
+    hasApiKeyForProvider(p.id),
+  );
+
   // Update selected model when preferences load
   useEffect(() => {
     if (preferences) {
-      setSelectedProvider(preferences.defaultProvider || "openai");
-      setSelectedModel(preferences.defaultModel || "gpt-4o");
+      const defaultProvider = preferences.defaultProvider || "openai";
+      // If saved provider is now disabled, switch to first enabled provider
+      if (!hasApiKeyForProvider(defaultProvider) && enabledProviders.length > 0) {
+        setSelectedProvider(enabledProviders[0].id);
+        const firstModel = AVAILABLE_MODELS.find(
+          (m) => m.provider === enabledProviders[0].id,
+        );
+        if (firstModel) setSelectedModel(firstModel.id);
+      } else {
+        setSelectedProvider(defaultProvider);
+        setSelectedModel(preferences.defaultModel || "gpt-4o");
+      }
     }
-  }, [preferences]);
+  }, [preferences, hasApiKeyForProvider, enabledProviders]);
 
   const modelsForProvider = AVAILABLE_MODELS.filter(
     (m) => m.provider === selectedProvider,
@@ -85,6 +133,11 @@ export function AnimatedAIChat() {
   const { sendMessage, isTyping, conversationId, setConversationId } = useChat({
     conversationId: null,
   });
+
+  // Fetch messages when conversationId exists
+  const { data: messages } = useQuery(
+    chatMessagesQuery(conversationId || ""),
+  );
 
   // Persist conversationId to localStorage
   useEffect(() => {
@@ -249,6 +302,12 @@ export function AnimatedAIChat() {
     cmd.label.toLowerCase().includes(value.slice(1).toLowerCase()),
   );
 
+  // Auto-scroll to bottom when messages change
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
   return (
     <div className="lab-bg relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-100 via-white to-zinc-200 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-950">
       {/* Background effects */}
@@ -293,6 +352,53 @@ export function AnimatedAIChat() {
           )}
         </motion.div>
 
+        {/* Message list */}
+        {((messages?.length ?? 0) > 0 || isTyping) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white/50 p-4 shadow-lg backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/50 max-h-[400px] overflow-y-auto"
+          >
+            {messages?.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+                    message.role === "user"
+                      ? "bg-zinc-900 text-white"
+                      : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                  }`}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl bg-zinc-100 px-4 py-2.5 dark:bg-zinc-800">
+                  <div className="flex items-center gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.span
+                        key={i}
+                        className="block h-1.5 w-1.5 rounded-full bg-muted-foreground"
+                        animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1, 0.8] }}
+                        transition={{
+                          duration: 1.2,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </motion.div>
+        )}
+
         {/* Chat input area */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -300,7 +406,20 @@ export function AnimatedAIChat() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="relative"
         >
+
           <div className="relative rounded-2xl border border-zinc-200 bg-white/90 shadow-xl backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/90">
+            <div className="relative  flex-1 p-2">
+              <textarea
+                ref={textareaRef}
+                value={value}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask zap a question..."
+                rows={1}
+                className="max-h-[200px]  min-h-[44px] w-full resize-none rounded-lg border-0 bg-transparent px-3 py-2.5 pr-10 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-0 focus:ring-zinc-200 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-zinc-800 break-words"
+                style={{ fieldSizing: "content", overflowWrap: "break-word" } as React.CSSProperties}
+              />
+            </div>
             {/* Attachments */}
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2 border-b border-zinc-200 p-3 dark:border-zinc-800">
@@ -340,11 +459,10 @@ export function AnimatedAIChat() {
                         setShowCommands(false);
                         textareaRef.current?.focus();
                       }}
-                      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
-                        index === selectedIndex
-                          ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                          : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50"
-                      }`}
+                      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${index === selectedIndex
+                        ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                        : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50"
+                        }`}
                     >
                       <Command className="h-4 w-4" />
                       {command.label}
@@ -369,8 +487,13 @@ export function AnimatedAIChat() {
                 </SelectTrigger>
                 <SelectContent>
                   {PROVIDERS.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
+                    <SelectItem
+                      key={p.id}
+                      value={p.id}
+                      disabled={!hasApiKeyForProvider(p.id)}
+                    >
                       {p.name}
+                      {!hasApiKeyForProvider(p.id) && " (not configured)"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -399,26 +522,15 @@ export function AnimatedAIChat() {
                 </button>
               </div>
 
-              <div className="relative flex-1">
-                <textarea
-                  ref={textareaRef}
-                  value={value}
-                  onChange={handleChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask zap a question..."
-                  rows={1}
-                  className="max-h-[200px] min-h-[44px] w-full resize-none rounded-lg border-0 bg-transparent px-3 py-2.5 pr-10 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-0 focus:ring-zinc-200 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-zinc-800"
-                  style={{ fieldSizing: "content" } as React.CSSProperties}
-                />
-              </div>
 
-              <button
+
+              <Button
                 onClick={handleSend}
                 disabled={!value.trim() || isTyping}
-                className="rounded-lg bg-zinc-900 p-2.5 text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="rounded-lg ml-auto bg-zinc-900 p-2.5 text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
                 <Send className="h-5 w-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Typing indicator */}
