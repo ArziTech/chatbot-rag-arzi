@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Command, Loader, Paperclip, Send, X } from "lucide-react";
+import { Command, Paperclip, Send, X } from "lucide-react";
 import {
   type ChangeEvent,
   type KeyboardEvent,
@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useChat } from "@/features/chat";
 
 interface CommandItem {
   label: string;
@@ -44,7 +45,6 @@ function TypingDots() {
 
 export function AnimatedAIChat() {
   const [value, setValue] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [attachments, setAttachments] = useState<
@@ -52,6 +52,26 @@ export function AnimatedAIChat() {
   >([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const commandsRef = useRef<HTMLDivElement>(null);
+
+  const { sendMessage, isTyping, conversationId, setConversationId } = useChat({
+    conversationId: null,
+  });
+
+  // Persist conversationId to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("currentConversationId");
+      if (stored) {
+        setConversationId(stored);
+      }
+    }
+  }, [setConversationId]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && conversationId) {
+      localStorage.setItem("currentConversationId", conversationId);
+    }
+  }, [conversationId]);
 
   const adjustHeight = (reset = false) => {
     const textarea = textareaRef.current;
@@ -122,14 +142,11 @@ export function AnimatedAIChat() {
   const handleSend = async () => {
     if (!value.trim()) return;
 
-    setIsTyping(true);
+    const messageContent = value;
+    setValue("");
+    adjustHeight(true);
 
-    // Simulate response delay (mock streaming)
-    setTimeout(() => {
-      setIsTyping(false);
-      setValue("");
-      adjustHeight(true);
-    }, 3000);
+    await sendMessage(messageContent);
   };
 
   const handleAttachFile = async () => {
@@ -336,11 +353,7 @@ export function AnimatedAIChat() {
                 disabled={!value.trim() || isTyping}
                 className="rounded-lg bg-zinc-900 p-2.5 text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
-                {isTyping ? (
-                  <Loader className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Send className="h-5 w-5" />
-                )}
+                <Send className="h-5 w-5" />
               </button>
             </div>
 
