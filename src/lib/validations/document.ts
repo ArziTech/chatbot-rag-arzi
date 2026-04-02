@@ -25,3 +25,9 @@ export function validateFileType(type: string): boolean {
 export function getFileExtension(fileName: string): string {
   return fileName.split(".").pop()?.toLowerCase() || "";
 }
+
+export const processSchema = z.object({
+  documentId: z.string().min(1),
+  chunkSize: z.number().min(100).max(2000).optional().default(500),
+  chunkOverlap: z.number().min(0).max(200).optional().default(50),
+});
