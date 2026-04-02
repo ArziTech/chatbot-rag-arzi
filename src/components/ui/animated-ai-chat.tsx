@@ -132,14 +132,68 @@ export function AnimatedAIChat() {
     }, 3000);
   };
 
-  const handleAttachment = () => {
-    // Mock file attachment
-    const mockFile = {
-      id: `file-${Date.now()}`,
-      name: "document.pdf",
+  const handleAttachFile = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pdf,.txt,.docx";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        // Get presigned URL
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to get upload URL");
+
+        const { documentId } = await res.json();
+
+        // Upload to R2 via presigned URL (response contains presignedUrl)
+        const data = await res.json();
+
+        // Get presigned URL again for actual upload
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+          }),
+        });
+
+        if (!uploadRes.ok) throw new Error("Failed to get upload URL");
+
+        const { presignedUrl } = await uploadRes.json();
+
+        // Upload to R2
+        await fetch(presignedUrl, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type },
+        });
+
+        setAttachments((prev) => [
+          ...prev,
+          { id: documentId, name: file.name },
+        ]);
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
     };
-    setAttachments((prev) => [...prev, mockFile]);
+    input.click();
   };
+
+  // Alias for compatibility
+  const handleAttachment = handleAttachFile;
 
   const removeAttachment = (id: string) => {
     setAttachments((prev) => prev.filter((a) => a.id !== id));
