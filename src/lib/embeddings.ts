@@ -1,8 +1,4 @@
-// Note: This depends on Task 5 AI provider abstraction.
-// Until then, we create a placeholder that can be replaced.
-// For MVP, directly use OpenAI embeddings API.
-
-import OpenAI from "openai";
+import { getProvider, type EmbeddingResponse } from "./ai";
 
 export const EMBEDDING_MODEL = "text-embedding-ada-002";
 export const EMBEDDING_DIMENSIONS = 1536;
@@ -13,45 +9,28 @@ export interface EmbeddingResult {
 }
 
 /**
- * Get OpenAI client instance (lazy initialization)
- */
-function getOpenAIClient(): OpenAI {
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-}
-
-/**
- * Generate embedding for a single text chunk
+ * Generate embedding for a single text chunk.
+ * Uses OpenAI by default (most reliable for embeddings).
+ * Gemini supports embeddings too but OpenAI is used for consistency.
  */
 export async function generateEmbedding(text: string): Promise<EmbeddingResult> {
-  const openai = getOpenAIClient();
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
-    input: text,
-  });
-
+  const provider = getProvider("openai");
+  const results = await provider.embed([text], { model: EMBEDDING_MODEL });
   return {
-    embedding: response.data[0].embedding,
-    tokens: response.usage?.total_tokens ?? 0,
+    embedding: results[0].embedding,
+    tokens: results[0].tokens,
   };
 }
 
 /**
  * Generate embeddings for multiple chunks (batch)
  */
-export async function generateEmbeddings(
-  texts: string[]
-): Promise<EmbeddingResult[]> {
-  const openai = getOpenAIClient();
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
-    input: texts,
-  });
-
-  return texts.map((text, i) => ({
-    embedding: response.data[i].embedding,
-    tokens: Math.ceil(text.length / 4), // rough estimate
+export async function generateEmbeddings(texts: string[]): Promise<EmbeddingResult[]> {
+  const provider = getProvider("openai");
+  const results = await provider.embed(texts, { model: EMBEDDING_MODEL });
+  return results.map((r: EmbeddingResponse) => ({
+    embedding: r.embedding,
+    tokens: r.tokens,
   }));
 }
 
