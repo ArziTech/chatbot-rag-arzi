@@ -28,6 +28,8 @@ model User {
 
   accounts   Account[]
   userRoles  UserRole[] // Multi-role support
+  documents  Document[]
+  conversations Conversation[]
 
   @@index([username])
   @@index([status, deletedAt])
@@ -116,4 +118,73 @@ model RolePermission {
   @@unique([roleId, permissionId])
   @@index([roleId])
   @@index([permissionId])
+}
+
+// ============================================
+// RAG Models - Document Storage
+// ============================================
+
+model Document {
+  id        String    @id @default(cuid())
+  name      String
+  type      String    // pdf, txt, docx
+  size      Int       // bytes
+  r2Key     String    // Cloudflare R2 object key
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String    @default("processing") // processing, ready, failed
+  metadata  Json?      // extracted metadata
+  createdAt DateTime  @default(now())
+  updatedAt DateTime @updatedAt
+
+  embeddings Embedding[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+// RAG - Text chunk embeddings stored in pgvector
+model Embedding {
+  id          String    @id @default(cuid())
+  documentId  String
+  document    Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content     String    @db.Text  // The text chunk
+  chunkIndex  Int       // Order of chunk in document
+  metadata    Json?     // { page, lineStart, lineEnd }
+  embedding   Unsupported("vector(1536)")  // OpenAI ada-002 = 1536 dims
+  createdAt   DateTime  @default(now())
+
+  @@index([documentId])
+  @@index([chunkIndex])
+}
+
+// RAG - Chat conversations
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  model     String?   // gpt-4o, claude-3-5-sonnet, llama3, etc.
+  provider  String?   // openai, anthropic, ollama, minimax, gemini
+  createdAt DateTime  @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  @@index([userId])
+}
+
+// RAG - Individual messages in a conversation
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String       // user, assistant, system
+  content        String       @db.Text
+  citations      Json?        // [{ embeddingId, documentId, documentName, chunkIndex, score, content }]
+  tokenCount     Int?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([createdAt])
 }
