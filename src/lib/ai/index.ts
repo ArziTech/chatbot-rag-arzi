@@ -13,18 +13,31 @@ export type ProviderName =
   | "gemini";
 
 // Lazy provider factory - only instantiates when requested
-const providerFactories: Record<ProviderName, () => AIProvider> = {
-  openai: () => new OpenAIProvider(),
-  anthropic: () => new AnthropicProvider(),
+const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> = {
+  openai: (apiKey?: string) => new OpenAIProvider(apiKey),
+  anthropic: (apiKey?: string) => new AnthropicProvider(apiKey),
   ollama: () => new OllamaProvider(),
   minimax: () => new MiniMaxProvider(),
   gemini: () => new GeminiProvider(),
 };
 
-// Cache for instantiated providers
+// Cache for instantiated providers (used when no per-user apiKey)
 const providerCache: Partial<Record<ProviderName, AIProvider>> = {};
 
-export function getProvider(name: ProviderName): AIProvider {
+export function getProvider(name: ProviderName, apiKey?: string): AIProvider {
+  // If an API key is provided, create a new provider instance with that key
+  // (per-user API keys should not be cached)
+  if (apiKey !== undefined) {
+    const factory = providerFactories[name];
+    if (!factory) {
+      throw new Error(
+        `Unknown AI provider: ${name}. Available: ${Object.keys(providerFactories).join(", ")}`,
+      );
+    }
+    return factory(apiKey);
+  }
+
+  // Otherwise use cached provider (no per-user key)
   if (!providerCache[name]) {
     const factory = providerFactories[name];
     if (!factory) {

@@ -19,6 +19,8 @@ export interface RAGOptions {
   hybridAlpha?: number;
   includeConversaionHistory?: number; // Last N messages
   maxContextTokens?: number;
+  provider?: string; // AI provider name (openai, anthropic, etc.)
+  apiKey?: string; // Optional per-user API key
 }
 
 export interface RAGResult {

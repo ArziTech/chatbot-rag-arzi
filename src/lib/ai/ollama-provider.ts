@@ -1,14 +1,25 @@
-import { AIProvider, Message, ChatOptions, ChatResponse, EmbeddingOptions, EmbeddingResponse } from "./types";
+import {
+  AIProvider,
+  Message,
+  ChatOptions,
+  ChatResponse,
+  EmbeddingOptions,
+  EmbeddingResponse,
+} from "./types";
 
 export class OllamaProvider implements AIProvider {
   name = "ollama" as const;
   private baseURL: string;
 
   constructor(baseURL?: string) {
-    this.baseURL = baseURL || process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+    this.baseURL =
+      baseURL || process.env.OLLAMA_BASE_URL || "http://localhost:11434";
   }
 
-  async chat(messages: Message[], options: ChatOptions = {}): Promise<ChatResponse> {
+  async chat(
+    messages: Message[],
+    options: ChatOptions = {},
+  ): Promise<ChatResponse> {
     const model = options.model || "llama3";
 
     const response = await fetch(`${this.baseURL}/api/chat`, {
@@ -38,7 +49,7 @@ export class OllamaProvider implements AIProvider {
 
   async *streamChat(
     messages: Message[],
-    options: ChatOptions = {}
+    options: ChatOptions = {},
   ): AsyncGenerator<string, void, unknown> {
     const model = options.model || "llama3";
 
@@ -88,7 +99,10 @@ export class OllamaProvider implements AIProvider {
     }
   }
 
-  async embed(texts: string[], options: EmbeddingOptions = {}): Promise<EmbeddingResponse[]> {
+  async embed(
+    texts: string[],
+    options: EmbeddingOptions = {},
+  ): Promise<EmbeddingResponse[]> {
     const model = options.model || "nomic-embed-text";
 
     const results = await Promise.all(
@@ -109,7 +123,7 @@ export class OllamaProvider implements AIProvider {
           tokens: Math.ceil(text.length / 4),
           model,
         };
-      })
+      }),
     );
 
     return results;

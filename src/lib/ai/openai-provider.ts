@@ -1,5 +1,12 @@
 import OpenAI from "openai";
-import { AIProvider, Message, ChatOptions, ChatResponse, EmbeddingOptions, EmbeddingResponse } from "./types";
+import {
+  AIProvider,
+  Message,
+  ChatOptions,
+  ChatResponse,
+  EmbeddingOptions,
+  EmbeddingResponse,
+} from "./types";
 
 export class OpenAIProvider implements AIProvider {
   name = "openai" as const;
@@ -11,7 +18,10 @@ export class OpenAIProvider implements AIProvider {
     });
   }
 
-  async chat(messages: Message[], options: ChatOptions = {}): Promise<ChatResponse> {
+  async chat(
+    messages: Message[],
+    options: ChatOptions = {},
+  ): Promise<ChatResponse> {
     const model = options.model || "gpt-4o";
     const systemMessage = options.systemPrompt
       ? [{ role: "system" as const, content: options.systemPrompt }]
@@ -19,7 +29,10 @@ export class OpenAIProvider implements AIProvider {
 
     const response = await this.client.chat.completions.create({
       model,
-      messages: [...systemMessage, ...messages] as OpenAI.Chat.ChatCompletionMessageParam[],
+      messages: [
+        ...systemMessage,
+        ...messages,
+      ] as OpenAI.Chat.ChatCompletionMessageParam[],
       temperature: options.temperature ?? 0.7,
       max_tokens: options.maxTokens ?? 4096,
     });
@@ -40,7 +53,7 @@ export class OpenAIProvider implements AIProvider {
 
   async *streamChat(
     messages: Message[],
-    options: ChatOptions = {}
+    options: ChatOptions = {},
   ): AsyncGenerator<string, void, unknown> {
     const model = options.model || "gpt-4o";
     const systemMessage = options.systemPrompt
@@ -49,7 +62,10 @@ export class OpenAIProvider implements AIProvider {
 
     const stream = await this.client.chat.completions.create({
       model,
-      messages: [...systemMessage, ...messages] as OpenAI.Chat.ChatCompletionMessageParam[],
+      messages: [
+        ...systemMessage,
+        ...messages,
+      ] as OpenAI.Chat.ChatCompletionMessageParam[],
       temperature: options.temperature ?? 0.7,
       max_tokens: options.maxTokens ?? 4096,
       stream: true,
@@ -61,7 +77,10 @@ export class OpenAIProvider implements AIProvider {
     }
   }
 
-  async embed(texts: string[], options: EmbeddingOptions = {}): Promise<EmbeddingResponse[]> {
+  async embed(
+    texts: string[],
+    options: EmbeddingOptions = {},
+  ): Promise<EmbeddingResponse[]> {
     const model = options.model || "text-embedding-ada-002";
 
     const response = await this.client.embeddings.create({

@@ -26,6 +26,12 @@ model User {
   role          Role      @relation(fields: [roleId], references: [id])
   blockedBy    String[]  @default([]) // Array of user IDs who blocked this user
 
+  // AI Preferences
+  openaiKey       String?  @db.Text  // Encrypted per-user OpenAI API key
+  anthropicKey    String?  @db.Text  // Encrypted per-user Anthropic API key
+  defaultModel   String   @default("gpt-4o")  // User's preferred model
+  defaultProvider String  @default("openai")  // User's preferred provider
+
   accounts   Account[]
   userRoles  UserRole[] // Multi-role support
   documents  Document[]

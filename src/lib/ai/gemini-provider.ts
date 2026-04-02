@@ -1,15 +1,27 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AIProvider, Message, ChatOptions, ChatResponse, EmbeddingOptions, EmbeddingResponse } from "./types";
+import {
+  AIProvider,
+  Message,
+  ChatOptions,
+  ChatResponse,
+  EmbeddingOptions,
+  EmbeddingResponse,
+} from "./types";
 
 export class GeminiProvider implements AIProvider {
   name = "gemini" as const;
   private client: GoogleGenerativeAI;
 
   constructor(apiKey?: string) {
-    this.client = new GoogleGenerativeAI(apiKey || process.env.GEMINI_API_KEY || "");
+    this.client = new GoogleGenerativeAI(
+      apiKey || process.env.GEMINI_API_KEY || "",
+    );
   }
 
-  async chat(messages: Message[], options: ChatOptions = {}): Promise<ChatResponse> {
+  async chat(
+    messages: Message[],
+    options: ChatOptions = {},
+  ): Promise<ChatResponse> {
     const modelName = options.model || "gemini-2.0-flash";
     const model = this.client.getGenerativeModel({ model: modelName });
 
@@ -21,11 +33,15 @@ export class GeminiProvider implements AIProvider {
       if (msg.role === "system") {
         systemPrompt = msg.content;
       } else {
-        contents.push(`${msg.role === "user" ? "user" : "model"}: ${msg.content}`);
+        contents.push(
+          `${msg.role === "user" ? "user" : "model"}: ${msg.content}`,
+        );
       }
     }
 
-    const prompt = systemPrompt ? `${systemPrompt}\n\n${contents.join("\n")}` : contents.join("\n");
+    const prompt = systemPrompt
+      ? `${systemPrompt}\n\n${contents.join("\n")}`
+      : contents.join("\n");
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -39,7 +55,7 @@ export class GeminiProvider implements AIProvider {
 
   async *streamChat(
     messages: Message[],
-    options: ChatOptions = {}
+    options: ChatOptions = {},
   ): AsyncGenerator<string, void, unknown> {
     const modelName = options.model || "gemini-2.0-flash";
     const model = this.client.getGenerativeModel({ model: modelName });
@@ -51,11 +67,15 @@ export class GeminiProvider implements AIProvider {
       if (msg.role === "system") {
         systemPrompt = msg.content;
       } else {
-        contents.push(`${msg.role === "user" ? "user" : "model"}: ${msg.content}`);
+        contents.push(
+          `${msg.role === "user" ? "user" : "model"}: ${msg.content}`,
+        );
       }
     }
 
-    const prompt = systemPrompt ? `${systemPrompt}\n\n${contents.join("\n")}` : contents.join("\n");
+    const prompt = systemPrompt
+      ? `${systemPrompt}\n\n${contents.join("\n")}`
+      : contents.join("\n");
 
     const result = await model.generateContentStream(prompt);
 
@@ -65,7 +85,10 @@ export class GeminiProvider implements AIProvider {
     }
   }
 
-  async embed(texts: string[], options: EmbeddingOptions = {}): Promise<EmbeddingResponse[]> {
+  async embed(
+    texts: string[],
+    options: EmbeddingOptions = {},
+  ): Promise<EmbeddingResponse[]> {
     const modelName = options.model || "gemini-embedding-001";
     const model = this.client.getGenerativeModel({ model: modelName });
 
@@ -77,7 +100,7 @@ export class GeminiProvider implements AIProvider {
           tokens: Math.ceil(text.length / 4),
           model: modelName,
         };
-      })
+      }),
     );
 
     return results;

@@ -1,5 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { AIProvider, Message, ChatOptions, ChatResponse, EmbeddingOptions, EmbeddingResponse } from "./types";
+import {
+  AIProvider,
+  Message,
+  ChatOptions,
+  ChatResponse,
+  EmbeddingOptions,
+  EmbeddingResponse,
+} from "./types";
 
 export class MiniMaxProvider implements AIProvider {
   name = "minimax" as const;
@@ -12,7 +19,10 @@ export class MiniMaxProvider implements AIProvider {
     });
   }
 
-  async chat(messages: Message[], options: ChatOptions = {}): Promise<ChatResponse> {
+  async chat(
+    messages: Message[],
+    options: ChatOptions = {},
+  ): Promise<ChatResponse> {
     const model = options.model || "MiniMax-M2.7";
     const systemMessage = options.systemPrompt || "";
 
@@ -52,7 +62,7 @@ export class MiniMaxProvider implements AIProvider {
 
   async *streamChat(
     messages: Message[],
-    options: ChatOptions = {}
+    options: ChatOptions = {},
   ): AsyncGenerator<string, void, unknown> {
     const model = options.model || "MiniMax-M2.7";
     const systemMessage = options.systemPrompt || "";
@@ -71,15 +81,23 @@ export class MiniMaxProvider implements AIProvider {
     });
 
     for await (const chunk of stream) {
-      if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+      if (
+        chunk.type === "content_block_delta" &&
+        chunk.delta.type === "text_delta"
+      ) {
         yield chunk.delta.text;
       }
       // MiniMax may also stream "thinking" blocks - skip them in output
     }
   }
 
-  async embed(_texts: string[], _options?: EmbeddingOptions): Promise<EmbeddingResponse[]> {
+  async embed(
+    _texts: string[],
+    _options?: EmbeddingOptions,
+  ): Promise<EmbeddingResponse[]> {
     // MiniMax does not have a public embeddings API
-    throw new Error("MiniMax does not support embeddings. Use OpenAI provider for embeddings.");
+    throw new Error(
+      "MiniMax does not support embeddings. Use OpenAI provider for embeddings.",
+    );
   }
 }

@@ -26,14 +26,36 @@ export async function POST(request: Request) {
     const { conversationId, content, model, provider } = validated.data;
     let convId = conversationId;
 
+    // Get user's preferences + API keys
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        defaultModel: true,
+        defaultProvider: true,
+        openaiKey: true,
+        anthropicKey: true,
+      },
+    });
+
+    const effectiveModel = model || user?.defaultModel || "gpt-4o";
+    const effectiveProvider = provider || user?.defaultProvider || "openai";
+
+    // Get the appropriate API key for the provider
+    let apiKey: string | undefined;
+    if (effectiveProvider === "openai" && user?.openaiKey) {
+      apiKey = user.openaiKey;
+    } else if (effectiveProvider === "anthropic" && user?.anthropicKey) {
+      apiKey = user.anthropicKey;
+    }
+
     // Create new conversation if needed
     if (!convId) {
       const conversation = await prisma.conversation.create({
         data: {
           userId: session.user.id,
           title: content.slice(0, 50),
-          model: model || "gpt-4o",
-          provider: provider || "openai",
+          model: effectiveModel,
+          provider: effectiveProvider,
         },
       });
       convId = conversation.id;
@@ -75,11 +97,15 @@ export async function POST(request: Request) {
           for await (const chunk of streamRAGPipeline(
             content,
             session.user.id,
-            conversationHistory
+            conversationHistory,
+            {
+              provider: effectiveProvider,
+              apiKey,
+            },
           )) {
             fullResponse += chunk;
             controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`)
+              encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`),
             );
           }
 
@@ -94,14 +120,16 @@ export async function POST(request: Request) {
 
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`
-            )
+              `data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`,
+            ),
           );
           controller.close();
         } catch (error) {
           console.error("Stream error:", error);
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`)
+            encoder.encode(
+              `data: ${JSON.stringify({ error: "Stream failed" })}\n\n`,
+            ),
           );
           controller.close();
         }

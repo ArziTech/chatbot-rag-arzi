@@ -1,5 +1,5 @@
 import { retrieve } from "./retriever";
-import { getProvider } from "./index";
+import { getProvider, type ProviderName } from "./index";
 import type { Message, RAGOptions, RAGResult, RetrievedChunk } from "./types";
 
 // Types are defined in ./types.ts
@@ -45,7 +45,8 @@ export async function runRAGPipeline(
 ): Promise<RAGResult> {
   const topK = options.topK ?? 5;
   const maxHistory = options.includeConversaionHistory ?? 10;
-  const maxContextTokens = options.maxContextTokens ?? DEFAULT_MAX_CONTEXT_TOKENS;
+  const maxContextTokens =
+    options.maxContextTokens ?? DEFAULT_MAX_CONTEXT_TOKENS;
 
   // Step 1: Retrieve relevant chunks
   const chunks = await retrieve(query, userId, {
@@ -55,7 +56,10 @@ export async function runRAGPipeline(
 
   // Step 2: Build context
   const retrievedContext = buildContext(chunks);
-  const historyContext = buildConversationHistory(conversationHistory, maxHistory);
+  const historyContext = buildConversationHistory(
+    conversationHistory,
+    maxHistory,
+  );
 
   // Step 3: Build system prompt with context
   let systemPrompt = `You are a helpful AI assistant with access to the user's documents. `;
@@ -103,6 +107,8 @@ export async function* streamRAGPipeline(
 ): AsyncGenerator<string, void, unknown> {
   const topK = options.topK ?? 5;
   const maxHistory = options.includeConversaionHistory ?? 10;
+  const providerName = options.provider ?? "openai";
+  const apiKey = options.apiKey;
 
   // Retrieve chunks
   const chunks = await retrieve(query, userId, {
@@ -110,7 +116,10 @@ export async function* streamRAGPipeline(
     hybridAlpha: options.hybridAlpha,
   });
   const retrievedContext = buildContext(chunks);
-  const historyContext = buildConversationHistory(conversationHistory, maxHistory);
+  const historyContext = buildConversationHistory(
+    conversationHistory,
+    maxHistory,
+  );
 
   // Build messages
   const messages: Message[] = [];
@@ -130,8 +139,8 @@ export async function* streamRAGPipeline(
     systemPrompt += `Use the following context to answer the user's question. If the answer is not in the context, say so.\n\n${retrievedContext}`;
   }
 
-  // Stream response
-  const provider = getProvider("openai");
+  // Stream response - use provider with optional per-user API key
+  const provider = getProvider(providerName as ProviderName, apiKey);
 
   yield* provider.streamChat(messages, {
     systemPrompt,

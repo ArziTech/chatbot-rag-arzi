@@ -1,5 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { AIProvider, Message, ChatOptions, ChatResponse, EmbeddingOptions, EmbeddingResponse } from "./types";
+import {
+  AIProvider,
+  Message,
+  ChatOptions,
+  ChatResponse,
+  EmbeddingOptions,
+  EmbeddingResponse,
+} from "./types";
 
 export class AnthropicProvider implements AIProvider {
   name = "anthropic" as const;
@@ -11,7 +18,10 @@ export class AnthropicProvider implements AIProvider {
     });
   }
 
-  async chat(messages: Message[], options: ChatOptions = {}): Promise<ChatResponse> {
+  async chat(
+    messages: Message[],
+    options: ChatOptions = {},
+  ): Promise<ChatResponse> {
     const model = options.model || "claude-3-5-sonnet-20241022";
     const systemMessage = options.systemPrompt || "";
 
@@ -29,7 +39,8 @@ export class AnthropicProvider implements AIProvider {
     });
 
     return {
-      content: response.content[0].type === "text" ? response.content[0].text : "",
+      content:
+        response.content[0].type === "text" ? response.content[0].text : "",
       usage: {
         promptTokens: response.usage.input_tokens,
         completionTokens: response.usage.output_tokens,
@@ -41,7 +52,7 @@ export class AnthropicProvider implements AIProvider {
 
   async *streamChat(
     messages: Message[],
-    options: ChatOptions = {}
+    options: ChatOptions = {},
   ): AsyncGenerator<string, void, unknown> {
     const model = options.model || "claude-3-5-sonnet-20241022";
     const systemMessage = options.systemPrompt || "";
@@ -60,15 +71,23 @@ export class AnthropicProvider implements AIProvider {
     });
 
     for await (const chunk of stream) {
-      if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
+      if (
+        chunk.type === "content_block_delta" &&
+        chunk.delta.type === "text_delta"
+      ) {
         yield chunk.delta.text;
       }
     }
   }
 
-  async embed(_texts: string[], _options?: EmbeddingOptions): Promise<EmbeddingResponse[]> {
+  async embed(
+    _texts: string[],
+    _options?: EmbeddingOptions,
+  ): Promise<EmbeddingResponse[]> {
     // Anthropic doesn't have an embeddings API (yet)
     // For RAG, use OpenAI embeddings even with Anthropic chat
-    throw new Error("Anthropic does not support embeddings. Use OpenAI provider for embeddings.");
+    throw new Error(
+      "Anthropic does not support embeddings. Use OpenAI provider for embeddings.",
+    );
   }
 }

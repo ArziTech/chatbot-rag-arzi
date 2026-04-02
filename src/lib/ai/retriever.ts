@@ -163,7 +163,11 @@ export async function retrieve(
   if (keywordResults.length === 0) return vectorResults.slice(0, topK);
 
   // RRF fusion
-  const fused = reciprocalRankFusion(vectorResults, keywordResults, hybridAlpha);
+  const fused = reciprocalRankFusion(
+    vectorResults,
+    keywordResults,
+    hybridAlpha,
+  );
 
   // Filter by min score and limit
   const minScore = options.minScore ?? DEFAULT_MIN_SCORE;
