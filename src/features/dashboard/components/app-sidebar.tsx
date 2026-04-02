@@ -9,9 +9,9 @@ export async function AppSidebar() {
       user={
         session?.user
           ? {
-            name: session.user.name,
-            username: (session.user as { username?: string }).username || "",
-          }
+              name: session.user.name,
+              username: (session.user as { username?: string }).username || "",
+            }
           : null
       }
     />

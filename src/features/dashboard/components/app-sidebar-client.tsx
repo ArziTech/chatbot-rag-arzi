@@ -236,12 +236,14 @@ export function AppSidebarClient({ user }: { user?: User | null }) {
       </div>
 
       {/* Footer with user info and logout */}
-      <div className="border-t p-2 shrink-0">
+      <div className="border-t p-2 shrink-0 mt-auto">
         {user ? (
-          <div className={cn(
-            "flex items-center gap-3 rounded-lg p-2",
-            isCollapsed ? "justify-center" : "px-2"
-          )}>
+          <div
+            className={cn(
+              "flex items-center gap-3 rounded-lg p-2",
+              isCollapsed ? "justify-center" : "px-2",
+            )}
+          >
             <Avatar className="h-8 w-8 rounded-lg shrink-0">
               <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-xs font-medium">
                 {user.name?.charAt(0).toUpperCase() || "U"}
@@ -262,7 +264,7 @@ export function AppSidebarClient({ user }: { user?: User | null }) {
               size="icon"
               className={cn(
                 "h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
-                !isCollapsed && "mr-0 ml-auto"
+                !isCollapsed && "mr-0 ml-auto",
               )}
               onClick={() => signOut({ callbackUrl: "/login" })}
               title="Logout"
