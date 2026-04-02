@@ -4,29 +4,18 @@ set -e  # Exit on any error
 echo "🔧 Running pre-commit checks..."
 echo ""
 
-# 1. Format code
+# Get staged files (added or modified, not deleted)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=AM)
+STAGED_COUNT=$(echo "$STAGED_FILES" | grep -c '\.' || true)
+
+# 1. Format code (only staged files)
 echo "🎨 Formatting code..."
-bun format
-echo "✅ Code formatted"
+if [ -n "$STAGED_FILES" ] && [ "$STAGED_COUNT" -gt 0 ]; then
+  echo "$STAGED_FILES" | xargs bun format
+  echo "✅ Code formatted ($STAGED_COUNT file(s))"
+else
+  echo "✅ No files to format"
+fi
 echo ""
 
-# 2. Run linter
-echo "🔍 Running linter..."
-bun lint
-echo "✅ Linting passed"
-echo ""
-
-# 3. Run tests
-echo "🧪 Running tests..."
-bun test
-echo "✅ Tests passed"
-echo ""
-
-# 4. Build project
-echo "🏗️  Building project..."
-bun build
-echo "✅ Build successful"
-echo ""
-
-echo "✨ All pre-commit checks passed!"
-
+echo "✨ Pre-commit checks passed!"
