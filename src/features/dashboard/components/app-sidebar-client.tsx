@@ -1,15 +1,23 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Terminal } from "lucide-react";
+import { ChevronDown, ChevronRight, LogOut, Terminal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
+import { signOut } from "next-auth/react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Permission } from "@/features/permissions";
 import { usePermission } from "@/features/permissions";
 import { getIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "../hooks/use-sidebar";
+
+interface User {
+  name: string | null;
+  username: string;
+}
 
 interface MenuItemProps {
   permission: Permission;
@@ -146,7 +154,7 @@ function MenuItem({ permission, isCollapsed, children }: MenuItemProps) {
   );
 }
 
-export function AppSidebarClient() {
+export function AppSidebarClient({ user }: { user?: User | null }) {
   const { permissions, isLoading } = usePermission();
   const { isCollapsed } = useSidebar();
 
@@ -224,6 +232,56 @@ export function AppSidebarClient() {
               </MenuItem>
             ))}
           </nav>
+        )}
+      </div>
+
+      {/* Footer with user info and logout */}
+      <div className="border-t p-2 shrink-0">
+        {user ? (
+          <div className={cn(
+            "flex items-center gap-3 rounded-lg p-2",
+            isCollapsed ? "justify-center" : "px-2"
+          )}>
+            <Avatar className="h-8 w-8 rounded-lg shrink-0">
+              <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-xs font-medium">
+                {user.name?.charAt(0).toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {user.name || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.username || ""}
+                </p>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+                !isCollapsed && "mr-0 ml-auto"
+              )}
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex justify-center p-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
     </aside>
