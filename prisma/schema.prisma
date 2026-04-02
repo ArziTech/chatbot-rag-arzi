@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Auth.js (NextAuth v5) with JWT strategy
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String // Hashed password for credentials provider
+  roleId        Int // Primary role (for backward compatibility)
+  status        Boolean   @default(true)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          Role      @relation(fields: [roleId], references: [id])
+  blockedBy    String[]  @default([]) // Array of user IDs who blocked this user
+
+  accounts   Account[]
+  userRoles  UserRole[] // Multi-role support
+
+  @@index([username])
+  @@index([status, deletedAt])
+}
+
+// Junction table for multi-role user support
+model UserRole {
+  id     Int    @id @default(autoincrement())
+  userId String
+  roleId Int
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+// Account model for OAuth token storage (NextAuth v5)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Role {
+  id                Int              @id @default(autoincrement())
+  name              String           @unique
+  description       String?
+  byPassAllFeatures Boolean          @default(false)
+  isActive          Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  User              User[]
+  UserRole          UserRole[]
+  RolePermission    RolePermission[]
+}
+
+model Permission {
+  id             Int              @id @default(autoincrement())
+  code           String           @unique
+  label          String           @unique
+  href           String?
+  description    String?
+  icon           String?
+  module         String?
+  isSection      Boolean          @default(false)
+  sequence       Float            @default(0)
+  parentId       Int?
+  showOnSidebar  Boolean          @default(false)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  parent         Permission?      @relation("children", fields: [parentId], references: [id])
+  children       Permission[]     @relation("children")
+  RolePermission RolePermission[]
+
+  @@index([parentId])
+  @@index([sequence])
+  @@index([module])
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  createdAt    DateTime   @default(now())
+  createdBy    String?
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}

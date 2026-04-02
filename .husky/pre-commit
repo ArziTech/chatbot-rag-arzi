@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -e  # Exit on any error
+
+echo "🔧 Running pre-commit checks..."
+echo ""
+
+# 1. Format code
+echo "🎨 Formatting code..."
+bun format
+echo "✅ Code formatted"
+echo ""
+
+# 2. Run linter
+echo "🔍 Running linter..."
+bun lint
+echo "✅ Linting passed"
+echo ""
+
+# 3. Run tests
+echo "🧪 Running tests..."
+bun test
+echo "✅ Tests passed"
+echo ""
+
+# 4. Build project
+echo "🏗️  Building project..."
+bun build
+echo "✅ Build successful"
+echo ""
+
+echo "✨ All pre-commit checks passed!"
+

@@ -1,0 +1,123 @@
+name: Tests
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # Unit & Integration Tests
+  unit-integration-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Setup environment variables
+        run: |
+          echo "DATABASE_URL=postgresql://test:test@localhost:5432/test_db" >> $GITHUB_ENV
+          echo "AUTH_SECRET=test-auth-secret-for-ci" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_APP_URL=http://localhost:3000" >> $GITHUB_ENV
+
+      - name: Generate Prisma client
+        run: bun run db:generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+
+      - name: Run unit and integration tests
+        run: bun run test:run -- --coverage
+
+  # E2E Tests
+  # e2e-tests:
+  #   name: E2E Tests
+  #   runs-on: ubuntu-latest
+  #
+  #   services:
+  #     postgres:
+  #       image: postgres:16-alpine
+  #       env:
+  #         POSTGRES_USER: test
+  #         POSTGRES_PASSWORD: test
+  #         POSTGRES_DB: test_db
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #       ports:
+  #         - 5432:5432
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup Bun
+  #       uses: oven-sh/setup-bun@v1
+  #       with:
+  #         bun-version: latest
+  #
+  #     - name: Install dependencies
+  #       run: bun install
+  #
+  #     - name: Setup environment variables
+  #       run: |
+  #         echo "DATABASE_URL=postgresql://test:test@localhost:5432/test_db" >> $GITHUB_ENV
+  #         echo "AUTH_SECRET=test-auth-secret-for-ci" >> $GITHUB_ENV
+  #         echo "NEXT_PUBLIC_APP_URL=http://localhost:3000" >> $GITHUB_ENV
+  #
+  #     - name: Generate Prisma client
+  #       run: bun run db:generate
+  #       env:
+  #         DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+  #
+  #     - name: Install Playwright browsers
+  #       run: bunx playwright install --with-deps chromium firefox webkit
+  #
+  #     - name: Build application
+  #       run: bun run build
+  #       env:
+  #         DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+  #
+  #     - name: Run database migrations
+  #       run: bunx prisma migrate deploy
+  #       env:
+  #         DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+  #
+  #     - name: Seed database
+  #       run: bunx prisma db seed
+  #       env:
+  #         DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+  #
+  #     - name: Run E2E tests
+  #       run: bun run test:e2e
+  #       env:
+  #         DATABASE_URL: postgresql://test:test@localhost:5432/test_db
