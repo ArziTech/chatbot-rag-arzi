@@ -1,3 +1,36 @@
+export interface RetrievedChunk {
+  embeddingId: string;
+  documentId: string;
+  documentName: string;
+  content: string;
+  score: number;
+  rank: number;
+}
+
+export interface RetrievalOptions {
+  topK?: number;
+  minScore?: number;
+  includeVector?: boolean;
+  hybridAlpha?: number; // 0 = pure keyword, 1 = pure vector, 0.5 = equal
+}
+
+export interface RAGOptions {
+  topK?: number;
+  hybridAlpha?: number;
+  includeConversaionHistory?: number; // Last N messages
+  maxContextTokens?: number;
+}
+
+export interface RAGResult {
+  response: string;
+  citations: RetrievedChunk[];
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
 export interface Message {
   role: "user" | "assistant" | "system";
   content: string;
@@ -40,9 +73,12 @@ export interface AIProvider {
   // Streaming chat
   streamChat(
     messages: Message[],
-    options?: ChatOptions
+    options?: ChatOptions,
   ): AsyncGenerator<string, void, unknown>;
 
   // Text embeddings (throw if unsupported)
-  embed(texts: string[], options?: EmbeddingOptions): Promise<EmbeddingResponse[]>;
+  embed(
+    texts: string[],
+    options?: EmbeddingOptions,
+  ): Promise<EmbeddingResponse[]>;
 }

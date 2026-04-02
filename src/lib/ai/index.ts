@@ -5,7 +5,12 @@ import { OllamaProvider } from "./ollama-provider";
 import { MiniMaxProvider } from "./minimax-provider";
 import { GeminiProvider } from "./gemini-provider";
 
-export type ProviderName = "openai" | "anthropic" | "ollama" | "minimax" | "gemini";
+export type ProviderName =
+  | "openai"
+  | "anthropic"
+  | "ollama"
+  | "minimax"
+  | "gemini";
 
 // Lazy provider factory - only instantiates when requested
 const providerFactories: Record<ProviderName, () => AIProvider> = {
@@ -23,7 +28,9 @@ export function getProvider(name: ProviderName): AIProvider {
   if (!providerCache[name]) {
     const factory = providerFactories[name];
     if (!factory) {
-      throw new Error(`Unknown AI provider: ${name}. Available: ${Object.keys(providerFactories).join(", ")}`);
+      throw new Error(
+        `Unknown AI provider: ${name}. Available: ${Object.keys(providerFactories).join(", ")}`,
+      );
     }
     providerCache[name] = factory();
   }
@@ -51,4 +58,18 @@ export function getProviderNameForModel(model: string): ProviderName {
   return "ollama";
 }
 
-export { type AIProvider, type Message, type ChatOptions, type ChatResponse, type EmbeddingOptions, type EmbeddingResponse } from "./types";
+export {
+  type AIProvider,
+  type Message,
+  type ChatOptions,
+  type ChatResponse,
+  type EmbeddingOptions,
+  type EmbeddingResponse,
+  type RetrievedChunk,
+  type RetrievalOptions,
+  type RAGOptions,
+  type RAGResult,
+} from "./types";
+
+export { retrieve } from "./retriever";
+export { runRAGPipeline, streamRAGPipeline } from "./rag-pipeline";
