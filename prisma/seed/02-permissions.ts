@@ -203,6 +203,27 @@ export async function seedPermissions(prisma: PrismaClient) {
       parentId: sectionMap.get("settings.section"),
       showOnSidebar: true,
     },
+    {
+      code: "runtime-env.view",
+      label: "Runtime Environments",
+      href: "/dashboard/runtime-env",
+      description: "View runtime environments",
+      icon: "Database",
+      module: "Settings",
+      isSection: false,
+      sequence: 5.2,
+      parentId: sectionMap.get("settings.section"),
+      showOnSidebar: true,
+    },
+    {
+      code: "runtime-env.manage",
+      label: "Manage Runtime Environments",
+      description: "Create, edit, and delete runtime environments",
+      module: "Settings",
+      isSection: false,
+      parentId: null,
+      showOnSidebar: false,
+    },
   ];
 
   // Create child permissions

@@ -1,6 +1,14 @@
 "use client";
 
-import { Database, Eye, EyeOff, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Database,
+  Eye,
+  EyeOff,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertDialog,
@@ -140,7 +148,8 @@ export function RuntimeEnvClient() {
         <CardHeader>
           <CardTitle>All Runtime Environments</CardTitle>
           <CardDescription>
-            A list of all runtime environment variables ({runtimeEnvs.length} total)
+            A list of all runtime environment variables ({runtimeEnvs.length}{" "}
+            total)
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 overflow-auto p-0">
@@ -151,7 +160,9 @@ export function RuntimeEnvClient() {
           ) : runtimeEnvs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Database className="mb-4 size-12 text-muted-foreground" />
-              <h3 className="text-lg font-semibold">No runtime environments found</h3>
+              <h3 className="text-lg font-semibold">
+                No runtime environments found
+              </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Get started by creating your first runtime environment.
               </p>
@@ -275,8 +286,8 @@ export function RuntimeEnvClient() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Runtime Environment?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this runtime environment? This action
-              cannot be undone.
+              Are you sure you want to delete this runtime environment? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

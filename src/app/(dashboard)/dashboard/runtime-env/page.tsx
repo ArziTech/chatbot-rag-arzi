@@ -5,4 +5,4 @@ function RuntimeEnvPage() {
   return <RuntimeEnvClient />;
 }
 
-export default WithAuth(RuntimeEnvPage, { permission: "settings.manage" });
+export default WithAuth(RuntimeEnvPage, { permission: "runtime-env.view" });
