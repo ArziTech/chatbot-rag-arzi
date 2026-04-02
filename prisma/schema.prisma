@@ -36,6 +36,7 @@ model User {
   userRoles  UserRole[] // Multi-role support
   documents  Document[]
   conversations Conversation[]
+  runtimeEnvs RuntimeEnv[] // User's runtime environment variables
 
   @@index([username])
   @@index([status, deletedAt])
@@ -193,4 +194,25 @@ model Message {
 
   @@index([conversationId])
   @@index([createdAt])
+}
+
+// ============================================
+// Runtime Environment Store
+// ============================================
+
+model RuntimeEnv {
+  id          String   @id @default(cuid())
+  name        String   // Display name (e.g., "Production API")
+  key         String   // Environment variable name (e.g., "OPENAI_API_KEY")
+  value       String   @db.Text // Encrypted value
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId])
+  @@index([isActive])
 }
