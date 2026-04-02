@@ -15,11 +15,11 @@ export function useChat(options: UseChatOptions = {}) {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(
-    initialConversationId ?? null
+    initialConversationId ?? null,
   );
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, model?: string, provider?: string) => {
       if (!content.trim()) return;
 
       setIsTyping(true);
@@ -37,7 +37,7 @@ export function useChat(options: UseChatOptions = {}) {
 
       queryClient.setQueryData<ChatMessage[]>(
         chatKeys.messages(currentConvId),
-        (old) => [...(old || []), tempUserMessage]
+        (old) => [...(old || []), tempUserMessage],
       );
 
       try {
@@ -45,7 +45,7 @@ export function useChat(options: UseChatOptions = {}) {
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId, content }),
+          body: JSON.stringify({ conversationId, content, model, provider }),
         });
 
         if (!response.ok) {
@@ -93,7 +93,7 @@ export function useChat(options: UseChatOptions = {}) {
                         createdAt: new Date().toISOString(),
                       },
                     ];
-                  }
+                  },
                 );
               }
 
@@ -103,13 +103,13 @@ export function useChat(options: UseChatOptions = {}) {
                 if (!conversationId && data.conversationId) {
                   setConversationId(data.conversationId);
                   // Migrate cached messages to the new conversation ID
-                  const cachedMessages = queryClient.getQueryData<ChatMessage[]>(
-                    chatKeys.messages(currentConvId)
-                  );
+                  const cachedMessages = queryClient.getQueryData<
+                    ChatMessage[]
+                  >(chatKeys.messages(currentConvId));
                   if (cachedMessages) {
                     queryClient.setQueryData(
                       chatKeys.messages(data.conversationId),
-                      cachedMessages
+                      cachedMessages,
                     );
                     queryClient.removeQueries({
                       queryKey: chatKeys.messages(currentConvId),
@@ -139,7 +139,7 @@ export function useChat(options: UseChatOptions = {}) {
         setIsTyping(false);
       }
     },
-    [conversationId, queryClient]
+    [conversationId, queryClient],
   );
 
   const cleanup = useCallback(() => {

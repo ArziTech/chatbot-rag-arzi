@@ -10,6 +10,15 @@ import {
   useState,
 } from "react";
 import { useChat } from "@/features/chat";
+import { useUserPreferences } from "@/providers/user-preferences-provider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AVAILABLE_MODELS, PROVIDERS } from "@/features/settings/types";
 
 interface CommandItem {
   label: string;
@@ -52,6 +61,26 @@ export function AnimatedAIChat() {
   >([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const commandsRef = useRef<HTMLDivElement>(null);
+
+  const { preferences } = useUserPreferences();
+  const [selectedProvider, setSelectedProvider] = useState(
+    preferences?.defaultProvider || "openai",
+  );
+  const [selectedModel, setSelectedModel] = useState(
+    preferences?.defaultModel || "gpt-4o",
+  );
+
+  // Update selected model when preferences load
+  useEffect(() => {
+    if (preferences) {
+      setSelectedProvider(preferences.defaultProvider || "openai");
+      setSelectedModel(preferences.defaultModel || "gpt-4o");
+    }
+  }, [preferences]);
+
+  const modelsForProvider = AVAILABLE_MODELS.filter(
+    (m) => m.provider === selectedProvider,
+  );
 
   const { sendMessage, isTyping, conversationId, setConversationId } = useChat({
     conversationId: null,
@@ -146,7 +175,7 @@ export function AnimatedAIChat() {
     setValue("");
     adjustHeight(true);
 
-    await sendMessage(messageContent);
+    await sendMessage(messageContent, selectedModel, selectedProvider);
   };
 
   const handleAttachFile = async () => {
@@ -326,6 +355,41 @@ export function AnimatedAIChat() {
             </AnimatePresence>
 
             <div className="flex items-end gap-2 p-3">
+              {/* Provider selector */}
+              <Select
+                value={selectedProvider}
+                onValueChange={(v) => {
+                  setSelectedProvider(v);
+                  const first = AVAILABLE_MODELS.find((m) => m.provider === v);
+                  if (first) setSelectedModel(first.id);
+                }}
+              >
+                <SelectTrigger className="w-[140px] h-[44px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROVIDERS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Model selector */}
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger className="w-[160px] h-[44px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {modelsForProvider.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <div className="flex items-center gap-1">
                 <button
                   onClick={handleAttachment}
