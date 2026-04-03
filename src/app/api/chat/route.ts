@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { streamRAGPipeline } from "@/lib/ai";
+import { decrypt } from "@/lib/crypto";
 import { z } from "zod";
 
 const chatSchema = z.object({
@@ -56,23 +57,23 @@ export async function POST(request: Request) {
     // Get the appropriate API key for the provider
     let apiKey: string | undefined;
     if (effectiveProvider === "openai" && user?.openaiKey) {
-      apiKey = user.openaiKey;
+      apiKey = decrypt(user.openaiKey);
     } else if (effectiveProvider === "anthropic" && user?.anthropicKey) {
-      apiKey = user.anthropicKey;
+      apiKey = decrypt(user.anthropicKey);
     } else {
       // Check runtime envs for other providers (gemini, minimax, etc.)
       const apiKeyName = PROVIDER_API_KEYS[effectiveProvider];
       if (apiKeyName) {
         const runtimeEnv = runtimeEnvs.find((env) => env.key === apiKeyName);
         if (runtimeEnv) {
-          apiKey = runtimeEnv.value;
+          apiKey = decrypt(runtimeEnv.value);
         }
       }
     }
 
     // Get Gemini API key for embeddings (always use Gemini for RAG)
     const geminiEnv = runtimeEnvs.find((env) => env.key === "GEMINI_API_KEY");
-    const embeddingApiKey = geminiEnv?.value;
+    const embeddingApiKey = geminiEnv ? decrypt(geminiEnv.value) : undefined;
 
     // Create new conversation if needed
     if (!convId) {

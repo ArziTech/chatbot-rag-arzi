@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { encrypt } from "@/lib/crypto";
 
 export async function GET() {
   try {
@@ -64,9 +65,9 @@ export async function PUT(request: Request) {
     if (defaultModel !== undefined) updateData.defaultModel = defaultModel;
     if (defaultProvider !== undefined)
       updateData.defaultProvider = defaultProvider;
-    if (openaiKey !== undefined) updateData.openaiKey = openaiKey || null;
+    if (openaiKey !== undefined) updateData.openaiKey = openaiKey ? encrypt(openaiKey) : null;
     if (anthropicKey !== undefined)
-      updateData.anthropicKey = anthropicKey || null;
+      updateData.anthropicKey = anthropicKey ? encrypt(anthropicKey) : null;
 
     const user = await prisma.user.update({
       where: { id: session.user.id },

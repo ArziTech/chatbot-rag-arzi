@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { encrypt } from "@/lib/crypto";
 import type { RuntimeEnvInput } from "../types";
 
 export async function getRuntimeEnvs() {
@@ -79,7 +80,7 @@ export async function createRuntimeEnv(data: RuntimeEnvInput) {
       data: {
         name: data.name,
         key: data.key,
-        value: data.value,
+        value: encrypt(data.value),
         description: data.description,
         isActive: data.isActive ?? true,
         userId: session.user.id,
@@ -140,7 +141,7 @@ export async function updateRuntimeEnv(
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.key !== undefined && { key: data.key }),
-        ...(data.value !== undefined && { value: data.value }),
+        ...(data.value !== undefined && { value: encrypt(data.value) }),
         ...(data.description !== undefined && {
           description: data.description,
         }),
