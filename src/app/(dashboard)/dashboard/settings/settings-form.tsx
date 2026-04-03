@@ -26,17 +26,21 @@ function SettingsForm() {
   const { preferences, isLoading, updatePreferences } = useUserPreferences();
   const [saving, setSaving] = useState(false);
   const [defaultProvider, setDefaultProvider] = useState(
-    preferences?.defaultProvider || "openai"
+    preferences?.defaultProvider || "openai",
   );
   const [defaultModel, setDefaultModel] = useState(
-    preferences?.defaultModel || "gpt-4o"
+    preferences?.defaultModel || "gpt-4o",
   );
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const openaiKey = (document.getElementById("openaiKey") as HTMLInputElement)?.value;
-      const anthropicKey = (document.getElementById("anthropicKey") as HTMLInputElement)?.value;
+      const openaiKey = (
+        document.getElementById("openaiKey") as HTMLInputElement
+      )?.value;
+      const anthropicKey = (
+        document.getElementById("anthropicKey") as HTMLInputElement
+      )?.value;
 
       await updatePreferences({
         defaultModel,
@@ -120,8 +124,8 @@ function SettingsForm() {
             API Keys
           </CardTitle>
           <CardDescription>
-            Optional: Add your own API keys to use your own credits.
-            Leave empty to use the default shared keys.
+            Optional: Add your own API keys to use your own credits. Leave empty
+            to use the default shared keys.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

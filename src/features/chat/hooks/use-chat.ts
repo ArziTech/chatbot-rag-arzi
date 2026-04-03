@@ -42,6 +42,7 @@ export function useChat(options: UseChatOptions = {}) {
 
       try {
         // Use fetch with SSE
+        console.log(`[useChat] Sending message with model=${model}, provider=${provider}`);
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -65,7 +65,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 },
+    );
   }
 }
 
@@ -112,6 +115,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "Document deleted" });
   } catch (error) {
     console.error("Delete error:", error);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 },
+    );
   }
 }

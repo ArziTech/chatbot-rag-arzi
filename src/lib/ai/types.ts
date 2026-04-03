@@ -12,6 +12,7 @@ export interface RetrievalOptions {
   minScore?: number;
   includeVector?: boolean;
   hybridAlpha?: number; // 0 = pure keyword, 1 = pure vector, 0.5 = equal
+  apiKey?: string; // Optional per-user API key for embeddings
 }
 
 export interface RAGOptions {
@@ -20,7 +21,8 @@ export interface RAGOptions {
   includeConversaionHistory?: number; // Last N messages
   maxContextTokens?: number;
   provider?: string; // AI provider name (openai, anthropic, etc.)
-  apiKey?: string; // Optional per-user API key
+  apiKey?: string; // Optional per-user API key for chat
+  embeddingApiKey?: string; // Optional per-user API key for embeddings
 }
 
 export interface RAGResult {

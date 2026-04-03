@@ -43,7 +43,7 @@ export async function sendMessage(
   conversationId: string | null,
   content: string,
   model?: string,
-  provider?: string
+  provider?: string,
 ): Promise<{ success: false; error: string } | SendMessageResult> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -94,10 +94,9 @@ export async function createStreamingChat(
   conversationId: string | null,
   content: string,
   model?: string,
-  provider?: string
+  provider?: string,
 ): Promise<
-  | { success: false; error: string }
-  | { success: true; response: Response }
+  { success: false; error: string } | { success: true; response: Response }
 > {
   const session = await auth();
   if (!session?.user?.id) {
@@ -152,11 +151,11 @@ export async function createStreamingChat(
           for await (const chunk of streamRAGPipeline(
             content,
             session.user.id,
-            conversationHistory
+            conversationHistory,
           )) {
             fullResponse += chunk;
             controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`)
+              encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`),
             );
           }
 
@@ -171,14 +170,16 @@ export async function createStreamingChat(
 
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`
-            )
+              `data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`,
+            ),
           );
           controller.close();
         } catch (error) {
           console.error("Stream error:", error);
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`)
+            encoder.encode(
+              `data: ${JSON.stringify({ error: "Stream failed" })}\n\n`,
+            ),
           );
           controller.close();
         }

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     if (!conversationId) {
       return NextResponse.json(
         { error: "conversationId required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     if (!conversation) {
       return NextResponse.json(
         { error: "Conversation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     console.error("Get messages error:", error);
     return NextResponse.json(
       { error: "Failed to get messages" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

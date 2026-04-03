@@ -30,7 +30,9 @@ interface ProcessOptions {
 /**
  * Extract text from PDF buffer
  */
-export async function extractTextFromPDF(buffer: Buffer): Promise<ParsedDocument> {
+export async function extractTextFromPDF(
+  buffer: Buffer,
+): Promise<ParsedDocument> {
   const parser = new PDFParse({ data: buffer });
   const textResult = await parser.getText();
   return {
@@ -44,7 +46,9 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<ParsedDocument
 /**
  * Extract text from DOCX buffer
  */
-export async function extractTextFromDOCX(buffer: Buffer): Promise<ParsedDocument> {
+export async function extractTextFromDOCX(
+  buffer: Buffer,
+): Promise<ParsedDocument> {
   const result = await mammoth.extractRawText({ buffer });
   return {
     text: result.value,
@@ -59,7 +63,7 @@ export async function extractTextFromDOCX(buffer: Buffer): Promise<ParsedDocumen
  */
 export async function extractText(
   buffer: Buffer,
-  fileType: string
+  fileType: string,
 ): Promise<ParsedDocument> {
   switch (fileType) {
     case "pdf":
@@ -80,10 +84,7 @@ export async function extractText(
 /**
  * Split text into overlapping chunks
  */
-export function chunkText(
-  text: string,
-  options: ProcessOptions = {}
-): Chunk[] {
+export function chunkText(text: string, options: ProcessOptions = {}): Chunk[] {
   const chunkSize = options.chunkSize ?? DEFAULT_CHUNK_SIZE;
   const chunkOverlap = options.chunkOverlap ?? DEFAULT_CHUNK_OVERLAP;
 
@@ -98,7 +99,10 @@ export function chunkText(
     const line = lines[i];
 
     // If adding this line exceeds chunk size, save current chunk and start new
-    if (currentChunk.length + line.length > chunkSize && currentChunk.length > 0) {
+    if (
+      currentChunk.length + line.length > chunkSize &&
+      currentChunk.length > 0
+    ) {
       chunks.push({
         content: currentChunk.trim(),
         chunkIndex,
@@ -146,7 +150,7 @@ export function chunkText(
 export async function processDocument(
   buffer: Buffer,
   fileType: string,
-  options: ProcessOptions = {}
+  options: ProcessOptions = {},
 ): Promise<Chunk[]> {
   const parsed = await extractText(buffer, fileType);
   return chunkText(parsed.text, options);

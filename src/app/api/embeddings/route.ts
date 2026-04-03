@@ -27,7 +27,10 @@ export async function POST(request: Request) {
     });
 
     if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 },
+      );
     }
 
     if (document.userId !== session.user.id) {
@@ -35,7 +38,10 @@ export async function POST(request: Request) {
     }
 
     if (document.status === "ready") {
-      return NextResponse.json({ error: "Document already processed" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Document already processed" },
+        { status: 400 },
+      );
     }
 
     // Update status to processing

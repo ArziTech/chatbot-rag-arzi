@@ -35,7 +35,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     if (!conversation) {
       return NextResponse.json(
         { error: "Conversation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     console.error("Get conversation error:", error);
     return NextResponse.json(
       { error: "Failed to get conversation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -67,7 +67,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     if (!conversation) {
       return NextResponse.json(
         { error: "Conversation not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -78,7 +78,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     console.error("Delete conversation error:", error);
     return NextResponse.json(
       { error: "Failed to delete conversation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

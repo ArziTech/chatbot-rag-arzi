@@ -48,6 +48,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("List documents error:", error);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 },
+    );
   }
 }

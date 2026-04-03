@@ -221,7 +221,7 @@ export function AppSidebarClient({ user }: { user?: User | null }) {
             ))}
           </div>
         ) : (
-          <nav className="space-y-1 h-full">
+          <nav className="space-y-1">
             {menuItems.map(({ parent, children }) => (
               <MenuItem
                 key={parent.id}
@@ -236,12 +236,12 @@ export function AppSidebarClient({ user }: { user?: User | null }) {
       </div>
 
       {/* Footer with user info and logout */}
-      <div className="border-t p-2 shrink-0 mt-auto">
+      <div className="border-t shrink-0 mt-auto">
         {user ? (
           <div
             className={cn(
-              "flex items-center gap-3 rounded-lg p-2",
-              isCollapsed ? "justify-center" : "px-2",
+              "flex items-center gap-2 rounded-lg m-2",
+              isCollapsed ? "justify-center p-2" : "px-2 py-2",
             )}
           >
             <Avatar className="h-8 w-8 rounded-lg shrink-0">
@@ -250,7 +250,7 @@ export function AppSidebarClient({ user }: { user?: User | null }) {
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <p className="text-sm font-medium truncate">
                   {user.name || "User"}
                 </p>
@@ -262,10 +262,7 @@ export function AppSidebarClient({ user }: { user?: User | null }) {
             <Button
               variant="ghost"
               size="icon"
-              className={cn(
-                "h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
-                !isCollapsed && "mr-0 ml-auto",
-              )}
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               onClick={() => signOut({ callbackUrl: "/login" })}
               title="Logout"
             >

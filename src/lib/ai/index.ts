@@ -13,13 +13,14 @@ export type ProviderName =
   | "gemini";
 
 // Lazy provider factory - only instantiates when requested
-const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> = {
-  openai: (apiKey?: string) => new OpenAIProvider(apiKey),
-  anthropic: (apiKey?: string) => new AnthropicProvider(apiKey),
-  ollama: () => new OllamaProvider(),
-  minimax: () => new MiniMaxProvider(),
-  gemini: () => new GeminiProvider(),
-};
+const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> =
+  {
+    openai: (apiKey?: string) => new OpenAIProvider(apiKey),
+    anthropic: (apiKey?: string) => new AnthropicProvider(apiKey),
+    ollama: () => new OllamaProvider(),
+    minimax: (apiKey?: string) => new MiniMaxProvider(apiKey),
+    gemini: (apiKey?: string) => new GeminiProvider(apiKey),
+  };
 
 // Cache for instantiated providers (used when no per-user apiKey)
 const providerCache: Partial<Record<ProviderName, AIProvider>> = {};

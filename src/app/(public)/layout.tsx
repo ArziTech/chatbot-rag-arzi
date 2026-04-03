@@ -8,7 +8,7 @@ export default function PublicLayout({
 }) {
   return (
     <UserPreferencesProvider>
-      <Navbar />
+      {/* <Navbar /> */}
       <main className="min-h-screen">{children}</main>
     </UserPreferencesProvider>
   );

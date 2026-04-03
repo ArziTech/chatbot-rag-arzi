@@ -141,7 +141,9 @@ export async function updateRuntimeEnv(
         ...(data.name !== undefined && { name: data.name }),
         ...(data.key !== undefined && { key: data.key }),
         ...(data.value !== undefined && { value: data.value }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
       },
     });

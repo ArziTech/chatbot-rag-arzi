@@ -145,10 +145,10 @@ export async function retrieve(
   const topK = options.topK ?? DEFAULT_TOP_K;
   const hybridAlpha = options.hybridAlpha ?? DEFAULT_HYBRID_ALPHA;
 
-  // Get query embedding
-  const provider = getProvider("openai");
+  // Get query embedding using Gemini
+  const provider = getProvider("gemini", options.apiKey);
   const embeddingResults = await provider.embed([query], {
-    model: "text-embedding-ada-002",
+    model: "gemini-embedding-001",
   });
   const queryEmbedding = embeddingResults[0].embedding;
 

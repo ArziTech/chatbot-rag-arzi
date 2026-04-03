@@ -110,12 +110,19 @@ export async function* streamRAGPipeline(
   const providerName = options.provider ?? "openai";
   const apiKey = options.apiKey;
 
-  // Retrieve chunks
-  const chunks = await retrieve(query, userId, {
-    topK,
-    hybridAlpha: options.hybridAlpha,
-  });
-  const retrievedContext = buildContext(chunks);
+  // Retrieve chunks - graceful fallback if retrieval fails (e.g., no embeddings API key)
+  let retrievedContext = "";
+  try {
+    const chunks = await retrieve(query, userId, {
+      topK,
+      hybridAlpha: options.hybridAlpha,
+      apiKey: options.embeddingApiKey,
+    });
+    retrievedContext = buildContext(chunks);
+  } catch (error) {
+    // Retrieval failed (e.g., no embeddings API key for MiniMax) - continue without RAG context
+    console.warn("RAG retrieval failed, continuing without context:", error);
+  }
   const historyContext = buildConversationHistory(
     conversationHistory,
     maxHistory,
@@ -133,7 +140,7 @@ export async function* streamRAGPipeline(
 
   messages.push({ role: "user", content: query });
 
-  let systemPrompt = `You are a helpful AI assistant with access to the user's documents. `;
+  let systemPrompt = `You are a helpful AI assistant. `;
 
   if (retrievedContext) {
     systemPrompt += `Use the following context to answer the user's question. If the answer is not in the context, say so.\n\n${retrievedContext}`;

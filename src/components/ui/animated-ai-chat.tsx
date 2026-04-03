@@ -104,16 +104,17 @@ export function AnimatedAIChat() {
   };
 
   // Get list of enabled providers (those with API keys)
-  const enabledProviders = PROVIDERS.filter((p) =>
-    hasApiKeyForProvider(p.id),
-  );
+  const enabledProviders = PROVIDERS.filter((p) => hasApiKeyForProvider(p.id));
 
   // Update selected model when preferences load
   useEffect(() => {
     if (preferences) {
       const defaultProvider = preferences.defaultProvider || "openai";
       // If saved provider is now disabled, switch to first enabled provider
-      if (!hasApiKeyForProvider(defaultProvider) && enabledProviders.length > 0) {
+      if (
+        !hasApiKeyForProvider(defaultProvider) &&
+        enabledProviders.length > 0
+      ) {
         setSelectedProvider(enabledProviders[0].id);
         const firstModel = AVAILABLE_MODELS.find(
           (m) => m.provider === enabledProviders[0].id,
@@ -135,9 +136,7 @@ export function AnimatedAIChat() {
   });
 
   // Fetch messages when conversationId exists
-  const { data: messages } = useQuery(
-    chatMessagesQuery(conversationId || ""),
-  );
+  const { data: messages } = useQuery(chatMessagesQuery(conversationId || ""));
 
   // Persist conversationId to localStorage
   useEffect(() => {
@@ -383,7 +382,10 @@ export function AnimatedAIChat() {
                       <motion.span
                         key={i}
                         className="block h-1.5 w-1.5 rounded-full bg-muted-foreground"
-                        animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1, 0.8] }}
+                        animate={{
+                          opacity: [0.4, 1, 0.4],
+                          scale: [0.8, 1, 0.8],
+                        }}
                         transition={{
                           duration: 1.2,
                           repeat: Infinity,
@@ -406,7 +408,6 @@ export function AnimatedAIChat() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="relative"
         >
-
           <div className="relative rounded-2xl border border-zinc-200 bg-white/90 shadow-xl backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/90">
             <div className="relative  flex-1 p-2">
               <textarea
@@ -417,7 +418,12 @@ export function AnimatedAIChat() {
                 placeholder="Ask zap a question..."
                 rows={1}
                 className="max-h-[200px]  min-h-[44px] w-full resize-none rounded-lg border-0 bg-transparent px-3 py-2.5 pr-10 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-0 focus:ring-zinc-200 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-zinc-800 break-words"
-                style={{ fieldSizing: "content", overflowWrap: "break-word" } as React.CSSProperties}
+                style={
+                  {
+                    fieldSizing: "content",
+                    overflowWrap: "break-word",
+                  } as React.CSSProperties
+                }
               />
             </div>
             {/* Attachments */}
@@ -459,10 +465,11 @@ export function AnimatedAIChat() {
                         setShowCommands(false);
                         textareaRef.current?.focus();
                       }}
-                      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${index === selectedIndex
-                        ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-                        : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50"
-                        }`}
+                      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
+                        index === selectedIndex
+                          ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                          : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-800/50"
+                      }`}
                     >
                       <Command className="h-4 w-4" />
                       {command.label}
@@ -521,8 +528,6 @@ export function AnimatedAIChat() {
                   <Paperclip className="h-5 w-5" />
                 </button>
               </div>
-
-
 
               <Button
                 onClick={handleSend}

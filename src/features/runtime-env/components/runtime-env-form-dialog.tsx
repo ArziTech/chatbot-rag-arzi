@@ -118,7 +118,9 @@ export function RuntimeEnvFormDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Runtime Environment" : "Create New Runtime Environment"}
+            {isEditing
+              ? "Edit Runtime Environment"
+              : "Create New Runtime Environment"}
           </DialogTitle>
           <DialogDescription>
             {isEditing

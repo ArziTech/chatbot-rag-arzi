@@ -35,12 +35,7 @@ export function useCreateRuntimeEnv() {
   return useMutation({
     ...createRuntimeEnvMutation,
     onSuccess: (data, variables, context) => {
-      createRuntimeEnvMutation.onSuccess(
-        data,
-        variables,
-        context,
-        queryClient,
-      );
+      createRuntimeEnvMutation.onSuccess(data, variables, context, queryClient);
     },
   });
 }

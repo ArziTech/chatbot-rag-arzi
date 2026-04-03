@@ -31,7 +31,7 @@ export async function GET() {
     console.error("List conversations error:", error);
     return NextResponse.json(
       { error: "Failed to list conversations" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     console.error("Create conversation error:", error);
     return NextResponse.json(
       { error: "Failed to create conversation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

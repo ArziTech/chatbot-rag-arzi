@@ -34,10 +34,7 @@ export async function getPresignedUploadUrl(
 }
 
 // Generate presigned GET URL for downloading
-export async function getPresignedDownloadUrl(
-  key: string,
-  expiresIn = 3600,
-) {
+export async function getPresignedDownloadUrl(key: string, expiresIn = 3600) {
   const command = new GetObjectCommand({
     Bucket: R2_BUCKET,
     Key: key,

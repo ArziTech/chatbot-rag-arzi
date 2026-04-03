@@ -6,7 +6,10 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
+      );
     }
 
     const user = await prisma.user.findUnique({
@@ -20,7 +23,10 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({
@@ -34,7 +40,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Get preferences error:", error);
-    return NextResponse.json({ success: false, error: "Failed to get preferences" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to get preferences" },
+      { status: 500 },
+    );
   }
 }
 
@@ -42,7 +51,10 @@ export async function PUT(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
+      );
     }
 
     const body = await request.json();
@@ -50,9 +62,11 @@ export async function PUT(request: Request) {
 
     const updateData: Record<string, unknown> = {};
     if (defaultModel !== undefined) updateData.defaultModel = defaultModel;
-    if (defaultProvider !== undefined) updateData.defaultProvider = defaultProvider;
+    if (defaultProvider !== undefined)
+      updateData.defaultProvider = defaultProvider;
     if (openaiKey !== undefined) updateData.openaiKey = openaiKey || null;
-    if (anthropicKey !== undefined) updateData.anthropicKey = anthropicKey || null;
+    if (anthropicKey !== undefined)
+      updateData.anthropicKey = anthropicKey || null;
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
@@ -76,6 +90,9 @@ export async function PUT(request: Request) {
     });
   } catch (error) {
     console.error("Update preferences error:", error);
-    return NextResponse.json({ success: false, error: "Failed to update preferences" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update preferences" },
+      { status: 500 },
+    );
   }
 }

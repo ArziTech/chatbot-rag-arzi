@@ -37,6 +37,19 @@ export async function POST(request: Request) {
       },
     });
 
+    // Get user's runtime envs for API keys
+    const runtimeEnvs = await prisma.runtimeEnv.findMany({
+      where: { userId: session.user.id, isActive: true },
+    });
+
+    // Map provider to API key env var name
+    const PROVIDER_API_KEYS: Record<string, string> = {
+      openai: "OPENAI_API_KEY",
+      anthropic: "ANTHROPIC_API_KEY",
+      gemini: "GEMINI_API_KEY",
+      minimax: "MINIMAX_API_KEY",
+    };
+
     const effectiveModel = model || user?.defaultModel || "gpt-4o";
     const effectiveProvider = provider || user?.defaultProvider || "openai";
 
@@ -46,7 +59,20 @@ export async function POST(request: Request) {
       apiKey = user.openaiKey;
     } else if (effectiveProvider === "anthropic" && user?.anthropicKey) {
       apiKey = user.anthropicKey;
+    } else {
+      // Check runtime envs for other providers (gemini, minimax, etc.)
+      const apiKeyName = PROVIDER_API_KEYS[effectiveProvider];
+      if (apiKeyName) {
+        const runtimeEnv = runtimeEnvs.find((env) => env.key === apiKeyName);
+        if (runtimeEnv) {
+          apiKey = runtimeEnv.value;
+        }
+      }
     }
+
+    // Get Gemini API key for embeddings (always use Gemini for RAG)
+    const geminiEnv = runtimeEnvs.find((env) => env.key === "GEMINI_API_KEY");
+    const embeddingApiKey = geminiEnv?.value;
 
     // Create new conversation if needed
     if (!convId) {
@@ -101,6 +127,7 @@ export async function POST(request: Request) {
             {
               provider: effectiveProvider,
               apiKey,
+              embeddingApiKey,
             },
           )) {
             fullResponse += chunk;

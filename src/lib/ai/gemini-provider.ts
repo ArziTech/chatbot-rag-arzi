@@ -22,7 +22,7 @@ export class GeminiProvider implements AIProvider {
     messages: Message[],
     options: ChatOptions = {},
   ): Promise<ChatResponse> {
-    const modelName = options.model || "gemini-2.0-flash";
+    const modelName = options.model || "gemini-2.5-flash";
     const model = this.client.getGenerativeModel({ model: modelName });
 
     // Convert messages to Gemini format: interleave user/model, prepend system as first user message
@@ -57,7 +57,7 @@ export class GeminiProvider implements AIProvider {
     messages: Message[],
     options: ChatOptions = {},
   ): AsyncGenerator<string, void, unknown> {
-    const modelName = options.model || "gemini-2.0-flash";
+    const modelName = options.model || "gemini-2.5-flash";
     const model = this.client.getGenerativeModel({ model: modelName });
 
     const contents: string[] = [];

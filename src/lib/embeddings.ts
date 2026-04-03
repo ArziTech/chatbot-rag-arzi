@@ -13,7 +13,9 @@ export interface EmbeddingResult {
  * Uses OpenAI by default (most reliable for embeddings).
  * Gemini supports embeddings too but OpenAI is used for consistency.
  */
-export async function generateEmbedding(text: string): Promise<EmbeddingResult> {
+export async function generateEmbedding(
+  text: string,
+): Promise<EmbeddingResult> {
   const provider = getProvider("openai");
   const results = await provider.embed([text], { model: EMBEDDING_MODEL });
   return {
@@ -25,7 +27,9 @@ export async function generateEmbedding(text: string): Promise<EmbeddingResult> 
 /**
  * Generate embeddings for multiple chunks (batch)
  */
-export async function generateEmbeddings(texts: string[]): Promise<EmbeddingResult[]> {
+export async function generateEmbeddings(
+  texts: string[],
+): Promise<EmbeddingResult[]> {
   const provider = getProvider("openai");
   const results = await provider.embed(texts, { model: EMBEDDING_MODEL });
   return results.map((r: EmbeddingResponse) => ({
